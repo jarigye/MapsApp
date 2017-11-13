@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity  {
                //  Got last known location. In some rare situations this can be null.
                 if (location != null) {
                     mCurrentLocation = location;
+
                     Txt_latitude.setText(Double.toString(mCurrentLocation.getLatitude()));
                     Txt_longitude.setText(Double.toString(mCurrentLocation.getLongitude()));
                    message="Latitude:"+ Double.toString(mCurrentLocation.getLatitude())+"   "+"Longitude: "+Double.toString(mCurrentLocation.getLongitude()
@@ -82,6 +83,7 @@ public class MainActivity extends AppCompatActivity  {
                 for (Location mCurrentLocation : locationResult.getLocations()) {
                     startLocationUpdates();
                     // Update UI with location data
+
                     Txt_latitude.setText(Double.toString(mCurrentLocation.getLatitude()));
                     Txt_longitude.setText(Double.toString(mCurrentLocation.getLongitude()));
                     message="Latitude:"+ Double.toString(mCurrentLocation.getLatitude())+"   "+"Longitude: "+Double.toString(mCurrentLocation.getLongitude()

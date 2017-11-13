@@ -37,8 +37,10 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 
 public class MapFragment extends SupportMapFragment implements  GoogleMap.OnCameraChangeListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
@@ -58,8 +60,10 @@ public class MapFragment extends SupportMapFragment implements  GoogleMap.OnCame
     private OnFragmentInteractionListener mListener;
     private GoogleMap map;
     private FusedLocationProviderClient mLastLocationClient;
-    private Location mCurrentLocation;
-
+    private  Location mCurrentLocation;
+    public static double lat1;
+    public static double long1;
+    private FusedLocationProviderClient mFusedLocationClient;
     public MapFragment() {
         // Required empty public constructor
     }
@@ -128,32 +132,6 @@ public void onStart() {
         }
     }
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mGoogleMap=googleMap;
-        mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
-        //Initialize Google Play Services
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(getActivity(),
-                    android.Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
-                //Location Permission already granted
-                ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
-                buildGoogleApiClient();
-                mGoogleMap.setMyLocationEnabled(true);
-
-            } else {
-                //Request Location Permission
-                checkLocationPermission();
-            }
-        }
-        else {
-           buildGoogleApiClient();
-            mGoogleMap.setMyLocationEnabled(true);
-        }
-    }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
@@ -164,9 +142,8 @@ public void onStart() {
         if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
-            LocationServices.FusedLocationApi.getLastLocation( mGoogleApiClient );
-
-        }
+              LocationServices.FusedLocationApi.getLastLocation( mGoogleApiClient );
+                   }
     }
 
     @Override
@@ -187,7 +164,7 @@ public void onStart() {
         }
 
         //Place current location marker
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        LatLng latLng = new LatLng(lat1, long1);
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
@@ -206,9 +183,60 @@ public void onStart() {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
     }
+    @Override
+    public void onMapReady(final GoogleMap googleMap) {
+        mGoogleMap=googleMap;
+        mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        int permissionCheck = ContextCompat.checkSelfPermission(getActivity(),Manifest.permission.ACCESS_FINE_LOCATION);
+        ActivityCompat.requestPermissions(getActivity(),
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
+
+        mFusedLocationClient.getLastLocation().addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
+
+            public void onSuccess(Location location) {
+                //  Got last known location. In some rare situations this can be null.
+                if (location != null) {
+                    mCurrentLocation = location;
+                    lat1 = mCurrentLocation.getLatitude();
+                    long1 = mCurrentLocation.getLongitude();
+                    LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                    LatLng latLng = new LatLng(lat1, long1);
+                    builder.include(latLng);
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.position(latLng);
+                    markerOptions.title("Current Location");
+                    googleMap.addMarker(markerOptions);
+
+                }
+            }
+        });
+
+        //Initialize Google Play Services
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(getActivity(),
+                    android.Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                //Location Permission already granted
+                ActivityCompat.requestPermissions(getActivity(),
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
+                buildGoogleApiClient();
+                mGoogleMap.setMyLocationEnabled(true);
+
+            } else {
+                //Request Location Permission
+                checkLocationPermission();
+            }
+        }
+        else {
+            buildGoogleApiClient();
+            mGoogleMap.setMyLocationEnabled(true);
+        }
+    }
+
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
-      private void checkLocationPermission() {
+    private void checkLocationPermission() {
         if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                  {
 
@@ -280,11 +308,6 @@ public void onStart() {
     public void onCameraChange(CameraPosition cameraPosition) {
 
     }
-
-    public GoogleMap getMap() {
-        return map;
-    }
-
 
     /**
      * This interface must be implemented by activities that contain this
