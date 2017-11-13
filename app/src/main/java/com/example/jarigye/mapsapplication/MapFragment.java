@@ -34,6 +34,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -49,11 +51,14 @@ public class MapFragment extends SupportMapFragment implements  GoogleMap.OnCame
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     Marker mCurrLocationMarker;
-
+    private Circle mCircle;
+    double radiusInMeters = 100.0;
+    int strokeColor = 0xffff0000; //Color Code you want
+    int shadeColor = 0x44ff0000;
     private OnFragmentInteractionListener mListener;
     private GoogleMap map;
-    private Location mCurrLocation;
     private FusedLocationProviderClient mLastLocationClient;
+    private Location mCurrentLocation;
 
     public MapFragment() {
         // Required empty public constructor
@@ -64,10 +69,7 @@ public class MapFragment extends SupportMapFragment implements  GoogleMap.OnCame
         super.onCreate(savedInstanceState);
         ActivityCompat.requestPermissions(getActivity(),
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
-       // SupportMapFragment mapFragment = (SupportMapFragment) getActivity().getSupportFragmentManager()
-       //         .findFragmentById(R.id.map);
-      //  mapFragment.getMapAsync(this);
-          }
+               }
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
@@ -130,9 +132,7 @@ public void onStart() {
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap=googleMap;
         mGoogleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-//        LatLng currentloc = new LatLng(-34, 151);
-//        mGoogleMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-//        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
         //Initialize Google Play Services
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(getActivity(),
@@ -143,6 +143,7 @@ public void onStart() {
                         new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
                 buildGoogleApiClient();
                 mGoogleMap.setMyLocationEnabled(true);
+
             } else {
                 //Request Location Permission
                 checkLocationPermission();
@@ -163,18 +164,11 @@ public void onStart() {
         if (ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getActivity(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(),
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
-             LocationServices.FusedLocationApi.getLastLocation( mGoogleApiClient );
+            LocationServices.FusedLocationApi.getLastLocation( mGoogleApiClient );
 
         }
     }
-    //@Override
-//    public void onConnected(Bundle bundle) {
-//        mCurrentLocation = LocationServices
-//                .FusedLocationApi
-//                .getLastLocation( mGoogleApiClient );
-//
-//       initCamera( mCurrentLocation );
-//    }
+
     @Override
     public void onConnectionSuspended(int i) {
 
@@ -188,9 +182,9 @@ public void onStart() {
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
-//        if (mCurrLocationMarker != null) {
-//            mCurrLocationMarker.remove();
-//        }
+        if (mCurrLocationMarker != null) {
+            mCurrLocationMarker.remove();
+        }
 
         //Place current location marker
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
@@ -199,9 +193,18 @@ public void onStart() {
         markerOptions.title("Current Position");
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA));
         mCurrLocationMarker = mGoogleMap.addMarker(markerOptions);
-        //move map camera
-        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng,20));
 
+        CircleOptions addCircle = new CircleOptions().center(latLng).radius(radiusInMeters).fillColor(shadeColor).strokeColor(strokeColor).strokeWidth(8);
+        mCircle = mGoogleMap.addCircle(addCircle);
+
+        //move map camera
+        mGoogleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mGoogleMap.animateCamera(CameraUpdateFactory.zoomTo(11));
+
+        //stop location updates
+        if (mGoogleApiClient != null) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        }
     }
     public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
 
@@ -297,4 +300,5 @@ public void onStart() {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
 }

@@ -69,10 +69,9 @@ public class MainActivity extends AppCompatActivity  {
                //  Got last known location. In some rare situations this can be null.
                 if (location != null) {
                     mCurrentLocation = location;
-                   // startLocationUpdates();
                     Txt_latitude.setText(Double.toString(mCurrentLocation.getLatitude()));
                     Txt_longitude.setText(Double.toString(mCurrentLocation.getLongitude()));
-                    message="Latitude: "+ Double.toString(mCurrentLocation.getLatitude())+"   "+"Longitude: "+Double.toString(mCurrentLocation.getLongitude()
+                   message="Latitude:"+ Double.toString(mCurrentLocation.getLatitude())+"   "+"Longitude: "+Double.toString(mCurrentLocation.getLongitude()
                     );
                 }
             }
@@ -81,11 +80,12 @@ public class MainActivity extends AppCompatActivity  {
         mLocationCallback = new LocationCallback() {
             public void onLocationResult(LocationResult locationResult) {
                 for (Location mCurrentLocation : locationResult.getLocations()) {
+                    startLocationUpdates();
                     // Update UI with location data
-                   Double.toString(mCurrentLocation.getLatitude());
-                   Double.toString(mCurrentLocation.getLongitude());
-                   //message="Lat:"+Double.toString(mCurrentLocation.getLatitude())+""+"Longitude"+Double.toString(mCurrentLocation.getLongitude()
-                    //);
+                    Txt_latitude.setText(Double.toString(mCurrentLocation.getLatitude()));
+                    Txt_longitude.setText(Double.toString(mCurrentLocation.getLongitude()));
+                    message="Latitude:"+ Double.toString(mCurrentLocation.getLatitude())+"   "+"Longitude: "+Double.toString(mCurrentLocation.getLongitude()
+                    );
                 };
             }
         };
