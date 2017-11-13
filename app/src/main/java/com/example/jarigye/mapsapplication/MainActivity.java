@@ -72,7 +72,7 @@ public class MainActivity extends AppCompatActivity  {
                    // startLocationUpdates();
                     Txt_latitude.setText(Double.toString(mCurrentLocation.getLatitude()));
                     Txt_longitude.setText(Double.toString(mCurrentLocation.getLongitude()));
-                    message="Lat:"+ Double.toString(mCurrentLocation.getLatitude())+""+"Longitude"+Double.toString(mCurrentLocation.getLongitude()
+                    message="Latitude: "+ Double.toString(mCurrentLocation.getLatitude())+"   "+"Longitude: "+Double.toString(mCurrentLocation.getLongitude()
                     );
                 }
             }
@@ -82,15 +82,93 @@ public class MainActivity extends AppCompatActivity  {
             public void onLocationResult(LocationResult locationResult) {
                 for (Location mCurrentLocation : locationResult.getLocations()) {
                     // Update UI with location data
-                    Txt_latitude.setText(Double.toString(mCurrentLocation.getLatitude()));
-                    Txt_longitude.setText(Double.toString(mCurrentLocation.getLongitude()));
-                    message="Lat:"+Double.toString(mCurrentLocation.getLatitude())+""+"Longitude"+Double.toString(mCurrentLocation.getLongitude()
-                    );
+                   Double.toString(mCurrentLocation.getLatitude());
+                   Double.toString(mCurrentLocation.getLongitude());
+                   //message="Lat:"+Double.toString(mCurrentLocation.getLatitude())+""+"Longitude"+Double.toString(mCurrentLocation.getLongitude()
+                    //);
                 };
             }
         };
 
+        Button id_text = (Button) findViewById(R.id.id_text);
+        id_text.setOnClickListener(new View.OnClickListener() {
 
+            @Override
+            public void onClick(View v) {
+               try{
+                String phoneNo = "+250734598916";
+                String sms = message;
+
+                String smsSent = "SMS_SENT";
+                String smsDelivered = "SMS_DELIVERED";
+                    PendingIntent sentPI = PendingIntent.getBroadcast(getApplicationContext(), 0,
+                            new Intent(smsSent), 0);
+                    PendingIntent deliveredPI = PendingIntent.getBroadcast(getApplicationContext(), 0,
+                            new Intent(smsDelivered), 0);
+
+                // Receiver for Sent SMS.
+                registerReceiver(new BroadcastReceiver(){
+                    @Override
+                    public void onReceive(Context arg0, Intent arg1) {
+                        switch (getResultCode())
+                        {
+                            case Activity.RESULT_OK:
+                                Toast.makeText(getBaseContext(), "SMS sent",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                            case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+                                Toast.makeText(getBaseContext(), "Generic failure",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                            case SmsManager.RESULT_ERROR_NO_SERVICE:
+                                Toast.makeText(getBaseContext(), "No service",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                            case SmsManager.RESULT_ERROR_NULL_PDU:
+                                Toast.makeText(getBaseContext(), "Null PDU",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                            case SmsManager.RESULT_ERROR_RADIO_OFF:
+                                Toast.makeText(getBaseContext(), "Radio off",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                        }
+                         unregisterReceiver(this);
+                    }
+                }, new IntentFilter(smsSent));
+
+                // Receiver for Delivered SMS.
+                registerReceiver(new BroadcastReceiver(){
+                    @Override
+                    public void onReceive(Context arg0, Intent arg1) {
+                        switch (getResultCode())
+                        {
+                            case Activity.RESULT_OK:
+                                Toast.makeText(getBaseContext(), "SMS delivered",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                            case Activity.RESULT_CANCELED:
+                                Toast.makeText(getBaseContext(), "SMS not delivered",
+                                        Toast.LENGTH_SHORT).show();
+                                break;
+                        }
+                          unregisterReceiver(this);
+                    }
+
+                }, new IntentFilter(smsDelivered));
+
+                SmsManager smsManager = SmsManager.getDefault();
+                smsManager.sendTextMessage(phoneNo, null, sms, sentPI, deliveredPI);
+
+            }
+ catch (Exception e) {
+           Toast.makeText(getApplicationContext(),
+                        "SMS failed, please try again later!",
+                        Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+
+           }}
+        });
     }
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions,int[] grantResults)
@@ -100,13 +178,13 @@ public class MainActivity extends AppCompatActivity  {
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    SmsManager smsManager = SmsManager.getDefault();
-                    smsManager.sendTextMessage("+250734598916", null, message, null, null);
-                    Toast.makeText(getApplicationContext(), "SMS sent.",
-                            Toast.LENGTH_LONG).show();
+                    //SmsManager smsManager = SmsManager.getDefault();
+                   // smsManager.sendTextMessage("+250734598916", null, message, null, null);
+                    //Toast.makeText(getApplicationContext(), "SMS sent.",
+                        //    Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(getApplicationContext(),
-                            "SMS failed, please try again.", Toast.LENGTH_LONG).show();
+                   // Toast.makeText(getApplicationContext(),
+                         //   "SMS failed, please try again.", Toast.LENGTH_LONG).show();
                     return;
                 }
                 return;
@@ -131,24 +209,7 @@ public class MainActivity extends AppCompatActivity  {
        transaction.replace(R.id.contaner, fragment);
        transaction.commit();
    }
-    public void onTextClick(View view){
 
-        sendSMS();
-    }
-    protected void sendSMS() {
-        phoneNo = "+250734598916";
-       // String sms = "Location";
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.SEND_SMS)
-                != PackageManager.PERMISSION_GRANTED) {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.SEND_SMS)) {
-            } else {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.SEND_SMS},
-                        1);
-            }
-    }}
     @Override
     protected void onStop()
     {
